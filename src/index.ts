@@ -5,6 +5,9 @@ import { exec } from 'child_process'
 import plist, { PlistObject, PlistArray } from 'plist'
 import { Deferred } from 'ts-deferred'
 
+// App config
+import config from './reading-list.config'
+
 // Constants & Interfaces
 import {
   BookmarkRecord,
@@ -174,24 +177,21 @@ function startProcess() {
 const readConfigFile = () => {
   const defer = new Deferred<string>()
 
-  const readFile = () => {
-    const { configFile } = gFileData
-    return fs.promises.readFile(configFile, 'utf8')
-  }
-
-  const processFile = (data: string) => JSON.parse(data) as ConfigFile
-
-  const saveCfgData = (cfg: ConfigFile) => {
-    const { input, output } = cfg
+  const processConfig = () => {
+    const { local, input, output } = config
 
     // copy data from config file to global
+
     // copy strings
-    copyTo(cfg.local, 'dataPath', gConfig.local)
+    copyTo(local, 'dataPath', gConfig.local)
+
     // copy arrays
     output.forEach((service) => gConfig.output.push(service))
     input.forEach((service) => gConfig.input.push(service))
 
-    // copy global config to file data
+    // process config file data
+
+    // copy string
     copyTo(gConfig.local, 'dataPath', gFileData)
 
     // create full paths
@@ -200,12 +200,10 @@ const readConfigFile = () => {
     createPlistFilePathOut(gFileData)
     createDataFilePathIn(gFileData)
 
-    return 'OK'
+    return Promise.resolve('OK')
   }
 
-  readFile()
-    .then(processFile)
-    .then(saveCfgData)
+  processConfig()
     .then(() => defer.resolve('OK'))
     .catch((err) => {
       const eMsg = `${LOG_PREFIX} ERROR`
