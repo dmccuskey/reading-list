@@ -2,4 +2,4 @@
 .DS_Store
 node_modules
 
-reading-list.cfg.json
+src/reading-list.config.ts
